@@ -94,7 +94,7 @@ public class CacheManager extends ICacheManager<String> {
             if (DEBUG) {
                 Log.d(LOG_TAG, String.format("key: %s, cache file exist", key));
             }
-            return mRawData.getCacheData();
+            return mRawData.getData();
         }
 
         if (DEBUG) {
