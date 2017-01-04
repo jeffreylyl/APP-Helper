@@ -1,5 +1,8 @@
 package android.app.helper.cache;
 
+import android.app.helper.cache.diskcache.DiskLruCache;
+import android.app.helper.cache.diskcache.IDiskCache;
+import android.app.helper.cache.memorycache.IMemoryCache;
 import android.content.Context;
 import android.support.v4.util.LruCache;
 

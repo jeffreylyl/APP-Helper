@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Cache_Lib.iml" filepath="$PROJECT_DIR$/Cache_Lib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/App-Helper.iml" filepath="$PROJECT_DIR$/App-Helper.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/helper/helper.iml" filepath="$PROJECT_DIR$/helper/helper.iml" />
     </modules>

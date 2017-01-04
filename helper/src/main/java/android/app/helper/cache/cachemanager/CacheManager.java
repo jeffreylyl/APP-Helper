@@ -1,5 +1,12 @@
-package android.app.helper.cache;
+package android.app.helper.cache.cachemanager;
 
+import android.app.helper.cache.CacheFactory;
+import android.app.helper.cache.CacheMetaData;
+import android.app.helper.cache.diskcache.IDiskCache;
+import android.app.helper.cache.keygenerator.IKeyGenerator;
+import android.app.helper.cache.keygenerator.Md5KeyGenerator;
+import android.app.helper.cache.memorycache.IMemoryCache;
+import android.app.helper.cache.SimpleExecutor;
 import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
@@ -11,6 +18,7 @@ public class CacheManager extends ICacheManager<String> {
     private Context mContext;
     private IMemoryCache<CacheMetaData> mMemoryCache;
     private IDiskCache<CacheMetaData> mDiskLruCache;
+    private IKeyGenerator keyGenerator = new Md5KeyGenerator();
 
     public CacheManager(Context context) {
         mContext = context;
@@ -42,7 +50,7 @@ public class CacheManager extends ICacheManager<String> {
 
     private void checkCacheExist() {
         if (mMemoryCache == null && mDiskLruCache == null) {
-            throw new IllegalArgumentException("you should define at least one cache");
+            throw new IllegalArgumentException("you should define at least one cache type");
         }
     }
 
@@ -56,12 +64,12 @@ public class CacheManager extends ICacheManager<String> {
 
     @Override
     public String get(String key) {
-        return get(key, cacheTimeInSeconds);
+        return get(keyGenerator.generate(key), cacheTimeInSeconds);
     }
 
     @Override
     public void put(String key, String data) {
-        addToCache(key, data);
+        addToCache(keyGenerator.generate(key), data);
     }
 
     @Override
@@ -150,6 +158,8 @@ public class CacheManager extends ICacheManager<String> {
 
     @Override
     public boolean remove(String key) {
+        key = keyGenerator.generate(key);
+
         if (mDiskLruCache == null) {
             return removeFromMemoryCache(key);
         }

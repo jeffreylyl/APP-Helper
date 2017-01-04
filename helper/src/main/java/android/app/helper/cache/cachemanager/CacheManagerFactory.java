@@ -1,4 +1,4 @@
-package android.app.helper.cache;
+package android.app.helper.cache.cachemanager;
 
 import android.content.Context;
 

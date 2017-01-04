@@ -1,8 +1,8 @@
 package android.app.demo;
 
 import android.app.cacheManager.R;
-import android.app.helper.cache.CacheManagerFactory;
-import android.app.helper.cache.ICacheManager;
+import android.app.helper.cache.cachemanager.CacheManagerFactory;
+import android.app.helper.cache.cachemanager.ICacheManager;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;

@@ -2,13 +2,12 @@ package android.app.demo;
 
 import android.app.Activity;
 import android.app.cacheManager.R;
-import android.app.helper.cache.CacheManagerFactory;
-import android.app.helper.cache.ICacheManager;
+import android.app.helper.cache.cachemanager.CacheManagerFactory;
+import android.app.helper.cache.cachemanager.ICacheManager;
 import android.app.helper.mvc.IAsyncDataSource;
 import android.app.helper.mvc.IDataAdapter;
 import android.app.helper.mvc.IDataCacheLoader;
 import android.app.helper.mvc.MVCHelper;
-import android.app.helper.mvc.MVCNormalHelper;
 import android.app.helper.mvc.MVCUltraHelper;
 import android.app.helper.mvc.RequestHandle;
 import android.app.helper.mvc.ResponseSender;
@@ -31,7 +30,6 @@ import in.srain.cube.views.ptr.PtrFrameLayout;
 import in.srain.cube.views.ptr.header.MaterialHeader;
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.Func1;
 
 public class HelperActivity extends Activity {
     Handler handler = new Handler();

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.app.helper.cache;
+package android.app.helper.cache.diskcache;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
