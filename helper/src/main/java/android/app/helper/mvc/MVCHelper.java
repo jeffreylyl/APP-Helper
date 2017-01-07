@@ -37,12 +37,6 @@ import android.app.helper.mvc.IRefreshView.OnRefreshListener;
 import android.app.helper.mvc.ILoadViewFactory.ILoadMoreView;
 import android.app.helper.mvc.ILoadViewFactory.ILoadView;
 
-import rx.Observable;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
-
 /**
  * <br>
  * 刷新，加载更多规则<br>

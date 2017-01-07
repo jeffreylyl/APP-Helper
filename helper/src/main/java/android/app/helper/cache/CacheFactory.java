@@ -2,6 +2,7 @@ package android.app.helper.cache;
 
 import android.app.helper.cache.diskcache.DiskLruCache;
 import android.app.helper.cache.diskcache.IDiskCache;
+import android.app.helper.cache.keygenerator.IKeyGenerator;
 import android.app.helper.cache.memorycache.IMemoryCache;
 import android.content.Context;
 import android.support.v4.util.LruCache;
@@ -10,19 +11,33 @@ import java.io.File;
 import java.io.IOException;
 
 public class CacheFactory {
-    public static IMemoryCache<CacheMetaData> getDefaultMemoryCache(){
+    public static IMemoryCache<CacheMetaData> getDefaultMemoryCache() {
         return new DefaultMemoryCache();
     }
-    public static IDiskCache<CacheMetaData> getDefaultDiskCache(Context context){
+
+    public static IMemoryCache<CacheMetaData> getDefaultMemoryCache(int maxMemoryCacheSize) {
+        return new DefaultMemoryCache(maxMemoryCacheSize);
+    }
+
+    public static IDiskCache<CacheMetaData> getDefaultDiskCache(Context context) {
         return new DefaultDiskCache(context);
     }
 
-    public static class DefaultDiskCache implements IDiskCache<CacheMetaData>{
+    public static IDiskCache<CacheMetaData> getDefaultDiskCache(Context context, long maxDiskCacheSize) {
+        return new DefaultDiskCache(context, maxDiskCacheSize);
+    }
+
+    public static class DefaultDiskCache implements IDiskCache<CacheMetaData> {
         private DiskLruCache mDiskLruCache;
         private Context mContext;
 
-        public DefaultDiskCache(Context context){
+        public DefaultDiskCache(Context context) {
             initDiskLruCache(context);
+            mContext = context;
+        }
+
+        public DefaultDiskCache(Context context, long maxDiskCacheSize) {
+            initDiskLruCache(context, maxDiskCacheSize);
             mContext = context;
         }
 
@@ -38,6 +53,20 @@ public class CacheFactory {
                 e.printStackTrace();
             }
         }
+
+        public void initDiskLruCache(Context context, long maxDiskCacheSize) {
+            try {
+                File cacheDir = Utils.getDiskCacheDir(context, "thumb");
+                if (!cacheDir.exists()) {
+                    cacheDir.mkdirs();
+                }
+                mDiskLruCache = DiskLruCache
+                        .open(cacheDir, Utils.getAppVersion(context), 1, maxDiskCacheSize);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
         @Override
         public void clearCache() {
             if (!mDiskLruCache.isClosed() && mDiskLruCache != null) {
@@ -69,6 +98,7 @@ public class CacheFactory {
                 }
             }
         }
+
         private void flushCache() {
             if (mDiskLruCache != null && !mDiskLruCache.isClosed()) {
                 try {
@@ -78,6 +108,7 @@ public class CacheFactory {
                 }
             }
         }
+
         @Override
         public CacheMetaData get(String key) {
             DiskLruCache.Snapshot snapshot = null;
@@ -110,12 +141,22 @@ public class CacheFactory {
         }
     }
 
-    public static class DefaultMemoryCache implements IMemoryCache<CacheMetaData>{
+    public static class DefaultMemoryCache implements IMemoryCache<CacheMetaData> {
         private LruCache<String, CacheMetaData> mMemoryCache;
 
-        public DefaultMemoryCache(){
+        public DefaultMemoryCache() {
             int maxMemoery = (int) Runtime.getRuntime().maxMemory();
             int cacheSize = maxMemoery / 16; // memory cache size
+            mMemoryCache = new LruCache<String, CacheMetaData>(cacheSize) {
+                @Override
+                protected int sizeOf(String key, CacheMetaData cacheMetaData) {
+                    return (cacheMetaData.getSize() + key.getBytes().length);
+                }
+            };
+        }
+
+        public DefaultMemoryCache(int maxMemoryCacheSize) {
+            int cacheSize = maxMemoryCacheSize; // memory cache size
             mMemoryCache = new LruCache<String, CacheMetaData>(cacheSize) {
                 @Override
                 protected int sizeOf(String key, CacheMetaData cacheMetaData) {

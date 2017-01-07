@@ -3,15 +3,18 @@ package android.app.demo;
 import android.app.Activity;
 import android.app.cacheManager.R;
 import android.app.demo.datasource.RxDataSource;
+import android.app.demo.header.MyHeader;
 import android.app.helper.cache.cachemanager.CacheManagerFactory;
 import android.app.helper.cache.cachemanager.ICacheManager;
 import android.app.helper.mvc.IAsyncDataSource;
 import android.app.helper.mvc.IDataAdapter;
 import android.app.helper.mvc.IDataCacheLoader;
+import android.app.helper.mvc.ILoadViewFactory;
 import android.app.helper.mvc.MVCHelper;
 import android.app.helper.mvc.MVCUltraHelper;
 import android.app.helper.mvc.RequestHandle;
 import android.app.helper.mvc.ResponseSender;
+import android.app.helper.mvc.imp.DefaultLoadViewFactory;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
@@ -25,33 +28,31 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import in.srain.cube.views.ptr.PtrClassicFrameLayout;
 import in.srain.cube.views.ptr.PtrFrameLayout;
 import in.srain.cube.views.ptr.header.MaterialHeader;
 import rx.Observable;
 import rx.Subscriber;
 
-public class HelperActivity extends Activity {
+public class Helper2Activity extends Activity {
     Handler handler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_helper2);
         RecyclerView rv = (RecyclerView) findViewById(R.id.rv);
         rv.setLayoutManager(new LinearLayoutManager(this));
 
-        PtrClassicFrameLayout mPtrFrameLayout = (PtrClassicFrameLayout) findViewById(R.id.ptr);
-        final MaterialHeader header = new MaterialHeader(this);
-        header.setLayoutParams(new PtrFrameLayout.LayoutParams(-1, -2));
-        header.setPadding(0, 20, 0, 20);
-        header.setPtrFrameLayout(mPtrFrameLayout);
+        PtrFrameLayout mPtrFrameLayout = (PtrFrameLayout) findViewById(R.id.ptr);
+        final MyHeader header = new MyHeader(this);
         mPtrFrameLayout.setLoadingMinTime(800);
         mPtrFrameLayout.setDurationToCloseHeader(800);
         mPtrFrameLayout.setHeaderView(header);
         mPtrFrameLayout.addPtrUIHandler(header);
 
-        final MVCHelper<List<String>> helper = new MVCUltraHelper<List<String>>(mPtrFrameLayout);
+        ILoadViewFactory loadViewFactory = new MyLoadViewFactory();
+        final MVCHelper<List<String>> helper = new MVCUltraHelper<List<String>>
+                (mPtrFrameLayout, loadViewFactory.madeLoadView(), loadViewFactory.madeLoadMoreView());
         helper.setAdapter(new HelperDataAdapter(this));
         helper.setDataSource(new HelperRxDataSource());
         helper.refresh();

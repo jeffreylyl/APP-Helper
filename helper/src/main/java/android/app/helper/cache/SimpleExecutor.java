@@ -15,9 +15,7 @@ public class SimpleExecutor {
     private static final TimeUnit KEEP_ALIVE_TIME_UNIT;
     private static final int KEEP_ALIVE_TIME = 1;
     private static final String sDefaultThreadNamePrefix = "simple-executor-pool-";
-
     private static SimpleExecutor sInstance = null;
-
     private final ThreadPoolExecutor mThreadPool;
     private final BlockingQueue<Runnable> mTaskWorkQueue;
 
@@ -38,6 +36,10 @@ public class SimpleExecutor {
 
     public static SimpleExecutor create(String threadNamePrefix, int corePoolSize, int maxPoolSize) {
         return new SimpleExecutor(threadNamePrefix, corePoolSize, maxPoolSize);
+    }
+
+    public ThreadPoolExecutor getThreadPool() {
+        return mThreadPool;
     }
 
     public void execute(Runnable runnable) {

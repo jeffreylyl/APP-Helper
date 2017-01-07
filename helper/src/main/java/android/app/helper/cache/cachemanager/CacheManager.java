@@ -4,12 +4,12 @@ import android.app.helper.cache.CacheFactory;
 import android.app.helper.cache.CacheMetaData;
 import android.app.helper.cache.diskcache.IDiskCache;
 import android.app.helper.cache.keygenerator.IKeyGenerator;
-import android.app.helper.cache.keygenerator.Md5KeyGenerator;
 import android.app.helper.cache.memorycache.IMemoryCache;
-import android.app.helper.cache.SimpleExecutor;
 import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
+
+import java.util.concurrent.Executor;
 
 public class CacheManager extends ICacheManager<String> {
     public boolean DEBUG = true;
@@ -18,46 +18,52 @@ public class CacheManager extends ICacheManager<String> {
     private Context mContext;
     private IMemoryCache<CacheMetaData> mMemoryCache;
     private IDiskCache<CacheMetaData> mDiskLruCache;
-    private IKeyGenerator keyGenerator = new Md5KeyGenerator();
+    private IKeyGenerator keyGenerator;
+    private CacheManagerConfiguration cacheManagerConfiguration;
+    private Executor taskExecutor;
 
     public CacheManager(Context context) {
-        mContext = context;
-        initMemoryCache();
-        initDiskLruCache(context);
-    }
-
-    public CacheManager(Context context, boolean needMemoryCache, boolean needDiskCache) {
-        mContext = context;
-        if (needMemoryCache) {
-            initMemoryCache();
-        }
-        if (needDiskCache) {
-            initDiskLruCache(context);
-        }
+        mContext = context.getApplicationContext();
+        init(CacheManagerConfiguration.createDefault(context));
         checkCacheExist();
     }
 
-    public CacheManager(Context context, IMemoryCache<CacheMetaData> memoryCache, boolean needMemoryCache, IDiskCache<CacheMetaData> diskCache, boolean needDiskCache) {
-        mContext = context;
-        if (memoryCache == null && needMemoryCache) {
-            initMemoryCache();
-        }
-        if (diskCache == null && needDiskCache) {
-            initDiskLruCache(context);
-        }
-        checkCacheExist();
+    public CacheManager(Context context, boolean disableMemoryCache, boolean disableDiskCache) {
+        checkCacheAbility(disableMemoryCache, disableDiskCache);
+        mContext = context.getApplicationContext();
+        CacheManagerConfiguration.Builder builder = new CacheManagerConfiguration.Builder(context);
+        init(builder.disableDiskCache(disableDiskCache).disableMemoryCache(disableMemoryCache).build());
     }
 
-    private void checkCacheExist() {
-        if (mMemoryCache == null && mDiskLruCache == null) {
+    public CacheManager(Context context, IMemoryCache<CacheMetaData> memoryCache, boolean disableMemoryCache, IDiskCache<CacheMetaData> diskCache, boolean disableDiskCache) {
+        checkCacheAbility(disableMemoryCache, disableDiskCache);
+        mContext = context.getApplicationContext();
+        CacheManagerConfiguration.Builder builder = new CacheManagerConfiguration.Builder(context);
+        if (memoryCache == null && !disableMemoryCache) {
+            builder = builder.memoryCache(memoryCache);
+        }
+        if (diskCache == null && !disableDiskCache) {
+            builder = builder.diskCache(diskCache);
+        }
+        init(builder.build());
+    }
+
+    private void checkCacheAbility(boolean disableMemoryCache, boolean disableDiskCache) {
+        if (disableMemoryCache && disableDiskCache) {
             throw new IllegalArgumentException("you should define at least one cache type");
         }
     }
 
+    private void checkCacheExist() {
+        checkCacheAbility(mMemoryCache == null, mDiskLruCache == null);
+    }
+
+    @Deprecated
     private void initMemoryCache() {
         mMemoryCache = CacheFactory.getDefaultMemoryCache();
     }
 
+    @Deprecated
     private void initDiskLruCache(Context context) {
         mDiskLruCache = CacheFactory.getDefaultDiskCache(context);
     }
@@ -87,7 +93,7 @@ public class CacheManager extends ICacheManager<String> {
         if (mRawData != null) {
             boolean outOfDate = mRawData.isOutOfDateFor(cacheTimeInSeconds);
             if (outOfDate) {
-                SimpleExecutor.getInstance().execute(new Runnable() {
+                taskExecutor.execute(new Runnable() {
                     @Override
                     public void run() {
                         remove(key);
@@ -111,6 +117,19 @@ public class CacheManager extends ICacheManager<String> {
         return null;
     }
 
+    @Override
+    public void init(CacheManagerConfiguration cacheManagerConfiguration) {
+        if (cacheManagerConfiguration == null) {
+            throw new IllegalArgumentException("CacheManagerConfiguration required ");
+        }
+        if (this.cacheManagerConfiguration == null) {
+            this.mDiskLruCache = cacheManagerConfiguration.diskCache;
+            this.mMemoryCache = cacheManagerConfiguration.memoryCache;
+            this.keyGenerator = cacheManagerConfiguration.keyGenerator;
+            this.taskExecutor = cacheManagerConfiguration.taskExecutor;
+        }
+    }
+
     private CacheMetaData getFromMemoryCache(String key) {
         if (mMemoryCache != null) {
             return mMemoryCache.get(key);
@@ -132,7 +151,7 @@ public class CacheManager extends ICacheManager<String> {
         if (DEBUG) {
             Log.d(LOG_TAG, String.format("key: %s, addToCache", key));
         }
-        SimpleExecutor.getInstance().execute(
+        taskExecutor.execute(
                 new Runnable() {
                     @Override
                     public void run() {
