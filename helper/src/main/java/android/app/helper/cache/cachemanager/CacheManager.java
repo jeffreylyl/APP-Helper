@@ -70,7 +70,7 @@ public class CacheManager extends ICacheManager<String> {
 
     @Override
     public String get(String key) {
-        return get(keyGenerator.generate(key), cacheTimeInSeconds);
+        return get(key, cacheTimeInSeconds);
     }
 
     @Override
@@ -85,10 +85,11 @@ public class CacheManager extends ICacheManager<String> {
     }
 
     @Override
-    public String get(final String key, long cacheTimeInSeconds) {
-        CacheMetaData mRawData = getFromMemoryCache(key);
+    public String get(String key, long cacheTimeInSeconds) {
+        final String cacheKey = keyGenerator.generate(key);
+        CacheMetaData mRawData = getFromMemoryCache(cacheKey);
         if (mRawData == null) {
-            mRawData = getFromDiskCache(key);
+            mRawData = getFromDiskCache(cacheKey);
         }
         if (mRawData != null) {
             boolean outOfDate = mRawData.isOutOfDateFor(cacheTimeInSeconds);
@@ -96,23 +97,23 @@ public class CacheManager extends ICacheManager<String> {
                 taskExecutor.execute(new Runnable() {
                     @Override
                     public void run() {
-                        remove(key);
+                        remove(cacheKey);
                     }
                 });
 
                 if (DEBUG) {
-                    Log.d(LOG_TAG, String.format("key: %s, cache file out of date", key));
+                    Log.d(LOG_TAG, String.format("key: %s, cache file out of date", cacheKey));
                 }
                 return null;
             }
             if (DEBUG) {
-                Log.d(LOG_TAG, String.format("key: %s, cache file exist", key));
+                Log.d(LOG_TAG, String.format("key: %s, cache file exist", cacheKey));
             }
             return mRawData.getData();
         }
 
         if (DEBUG) {
-            Log.d(LOG_TAG, String.format("key: %s, cache file NOT exist", key));
+            Log.d(LOG_TAG, String.format("key: %s, cache file NOT exist", cacheKey));
         }
         return null;
     }
